@@ -1,16 +1,16 @@
-#include "sensor.h"
+#include "robot.h"
 
 const int baudCount = 9600;
+const Robot robot;
 
-Sensor sensor1(13, 12);
 
 void setup() {
-  sensor1.setUp();
   Serial.begin(baudCount);
+  robot.setUp();
 }
 
 void loop() {
-  int distance = sensor1.getDistance();
+  int distance = robot.sensorForward.getDistance();
   Serial.println(distance);
   delay(250);
 }
