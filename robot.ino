@@ -20,7 +20,6 @@ void Robot::safeMovementCheck() {
     this->moveStop();
   }
 }
-
 void Robot::moveForward() {
   // this->safeMovementCheck();
   motorLeft.forward();
@@ -32,7 +31,7 @@ void Robot::moveBackward() {
   motorRight.backward();
 }
 
-void Robot::moveLeft(int degreeOfTurn) {
+void Robot::turnLeft(int degreeOfTurn) {
   motorLeft.backward();
   motorRight.forward();
   // for time-delayed turning, 180 deg is roughly 1000 milliseconds
@@ -42,7 +41,7 @@ void Robot::moveLeft(int degreeOfTurn) {
   this->moveStop();
 }
 
-void Robot::moveRight(int degreeOfTurn) {
+void Robot::turnRight(int degreeOfTurn) {
   motorLeft.forward();
   motorRight.backward();
   int waitDuration = int((degreeOfTurn / 180.0) * 1000);

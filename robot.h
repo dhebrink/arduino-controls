@@ -16,8 +16,8 @@ class Robot {
     void safeMovementCheck();
     void moveForward();
     void moveBackward();
-    void moveLeft(int);
-    void moveRight(int);
+    void turnLeft(int);
+    void turnRight(int);
     void moveStop();
     Robot();
     ~Robot();

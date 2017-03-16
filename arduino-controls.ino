@@ -22,11 +22,11 @@ void loop() {
     delay(1000);
     int leftDistance = robot.sensorLeft.getDistance();
     if (distanceIsSafe(leftDistance)) {
-      robot.moveLeft(90);
+      robot.turnLeft(90);
     }
     else {
       // Never seems to get hit...?
-      robot.moveRight(90);
+      robot.turnRight(90);
     }
     delay(1000);
   }
