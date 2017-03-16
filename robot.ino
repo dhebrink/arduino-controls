@@ -10,6 +10,8 @@ Robot::~Robot() {
 
 void Robot::setUp() {
   sensorForward.setUp();
+  sensorRight.setUp();
+  sensorLeft.setUp();
   motorLeft.setUp();
   motorRight.setUp();
 }
