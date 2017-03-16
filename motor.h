@@ -8,7 +8,7 @@ class Motor {
     int pinDrive2;
   
   public:
-    int speed;
+    int motorSpeed;
     void setUp();
     void forward();
     void backward();
