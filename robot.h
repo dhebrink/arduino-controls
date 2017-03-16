@@ -10,11 +10,13 @@ class Robot {
 
   public:
     Sensor sensorForward = Sensor(13, 12);
+    Sensor sensorLeft = Sensor(11, 10);
     void setUp();
+    void safeMovementCheck();
     void moveForward();
     void moveBackward();
-    void moveLeft();
-    void moveRight();
+    void moveLeft(int);
+    void moveRight(int);
     void moveStop();
     Robot();
     ~Robot();

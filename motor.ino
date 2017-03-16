@@ -19,11 +19,13 @@ void Motor::setUp() {
 }
 
 void Motor::forward() {
+  digitalWrite(pinEnable, HIGH);
   digitalWrite(pinDrive1, HIGH);
   digitalWrite(pinDrive2, LOW);
 }
 
 void Motor::backward() {
+  digitalWrite(pinEnable, HIGH);
   digitalWrite(pinDrive1, LOW);
   digitalWrite(pinDrive2, HIGH);
 }

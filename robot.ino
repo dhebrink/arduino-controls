@@ -14,7 +14,15 @@ void Robot::setUp() {
   motorRight.setUp();
 }
 
+void Robot::safeMovementCheck() {
+  int frontDistance = this->sensorForward.getDistance();
+  if (frontDistance > 0 && frontDistance <= forwardDistanceThreshold) {
+    this->moveStop();
+  }
+}
+
 void Robot::moveForward() {
+  // this->safeMovementCheck();
   motorLeft.forward();
   motorRight.forward();
 }
@@ -24,14 +32,23 @@ void Robot::moveBackward() {
   motorRight.backward();
 }
 
-void Robot::moveLeft() {
+void Robot::moveLeft(int degreeOfTurn) {
   motorLeft.backward();
   motorRight.forward();
+  // for time-delayed turning, 180 deg is roughly 1000 milliseconds
+  int waitDuration = int((degreeOfTurn / 180.0) * 1000);
+  Serial.println("Waiting for " + String(waitDuration));
+  delay(waitDuration);
+  this->moveStop();
 }
 
-void Robot::moveRight() {
+void Robot::moveRight(int degreeOfTurn) {
   motorLeft.forward();
   motorRight.backward();
+  int waitDuration = int((degreeOfTurn / 180.0) * 1000);
+  Serial.println("Waiting for " + String(waitDuration));
+  delay(waitDuration);
+  this->moveStop();
 }
 
 void Robot::moveStop() {
