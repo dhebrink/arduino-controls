@@ -1,19 +1,13 @@
 #include "robot.h"
 
-const int baudCount = 9600;
 const Robot robot;
-const int forwardDistanceThreshold = 50;
+const int distanceThreshold = 20;
 
 bool distanceIsSafe(int givenDistance) {
-  return (givenDistance > 0 && givenDistance < forwardDistanceThreshold);
+  return (givenDistance > 0 && givenDistance < distanceThreshold);
 }
 
-void setup() {
-  Serial.begin(baudCount);
-  robot.setUp();
-}
-
-void loop() {
+void testTurningLeft() {
   int distance = robot.sensorForward.getDistance();
   Serial.println(distance);
 
@@ -33,4 +27,32 @@ void loop() {
   else {
     robot.moveForward();
   }
+}
+
+void testAcceleration() {
+  int startingSpeed = 10;
+  int maxSpeed = 100;
+  // Speed up until we get to max speed
+  robot.accelerate(maxSpeed);
+  // Wait for a couple seconds, should hold max speed
+  delay(4000);
+  // Slow back down to original speed
+  robot.decelerate(startingSpeed);
+  // Wait for a couple seconds, should hold slow speed
+  delay(4000);
+}
+
+void setup() {
+  Serial.begin(9600);
+  robot.setUp();
+}
+
+void loop() {
+  // For testing, put some functionality into a temporary function, then add it
+  // here. Uncomment/comment lines you want to test.
+  // Un-comment the `return` line to make the robot chill bro
+
+  //return
+  //testTurningLeft();
+  testAcceleration();
 }
