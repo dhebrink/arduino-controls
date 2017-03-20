@@ -4,14 +4,12 @@
 #include "sensor.h"
 
 class Robot {
-  private:
-    Motor motorLeft = Motor(9, 7, 8);
-    Motor motorRight = Motor(5, 4, 2);
-
   public:
-    Sensor sensorForward = Sensor(13, 12);
-    Sensor sensorLeft = Sensor(11, 10);
-    Sensor sensorRight = Sensor(6, 3);
+    Sensor sensorForward = Sensor(50, 51);
+    Sensor sensorLeft = Sensor(53, 52);
+    Sensor sensorRight = Sensor(48, 49);
+    Motor motorLeft = Motor(3, 24, 25);
+    Motor motorRight = Motor(2, 22, 23);
     void setUp();
     void accelerate(int endSpeed, int timeDelay = 500);
     void decelerate(int endSpeed, int timeDelay = 500);
@@ -20,6 +18,8 @@ class Robot {
     void turnLeft(int degreeOfTurn, int speed = 100);
     void turnRight(int degreeOfTurn, int speed = 100);
     void moveStop();
+    static void handleEncoderTickLeft();
+    static void handleEncoderTickRight();
     Robot();
     ~Robot();
 };

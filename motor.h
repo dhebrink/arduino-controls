@@ -6,6 +6,7 @@ class Motor {
     int pinEnable;
     int pinDrive1;
     int pinDrive2;
+    long long encoderTickCount;
     void setPinSpeed();
   
   public:
@@ -14,6 +15,7 @@ class Motor {
     void forward(int);
     void backward(int);
     void stop();
+    void incrementEncoderTickCount();
     Motor(int, int, int);
     ~Motor();
 };

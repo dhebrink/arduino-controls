@@ -10,6 +10,9 @@ Robot::~Robot() {
 }
 
 void Robot::setUp() {
+  attachInterrupt(digitalPinToInterrupt(18), handleEncoderTickLeft, RISING);
+  attachInterrupt(digitalPinToInterrupt(19), handleEncoderTickRight, RISING);
+  
   sensorForward.setUp();
   sensorRight.setUp();
   sensorLeft.setUp();
@@ -108,5 +111,14 @@ void Robot::turnRight(int degreeOfTurn, int speed) {
 void Robot::moveStop() {
   motorLeft.stop();
   motorRight.stop();
+}
+
+static void Robot::handleEncoderTickLeft() {
+  robot.motorLeft.incrementEncoderTickCount();
+}
+
+static void Robot::handleEncoderTickRight() {
+  robot.motorRight.incrementEncoderTickCount();
+  
 }
 
