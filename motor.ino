@@ -2,7 +2,7 @@
 
 Motor::Motor(int pinEnable, int pinDrive1, int pinDrive2) {
   // motorSpeed set to a percentage of max voltage to pins
-  this->motorSpeed = 100;
+  this->motorSpeed = 0;
   this->encoderTickCount = 0;
   this->pinEnable = pinEnable;
   this->pinDrive1 = pinDrive1;
@@ -42,6 +42,7 @@ void Motor::backward(int speed = 100) {
 }
 
 void Motor::stop() {
+  this->motorSpeed = 0;
   analogWrite(pinEnable, LOW);
   digitalWrite(pinDrive1, LOW);
   digitalWrite(pinDrive2, LOW);

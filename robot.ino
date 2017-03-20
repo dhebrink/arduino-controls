@@ -70,7 +70,7 @@ void Robot::decelerate(int endSpeed, int timeDelay) {
   // Similar to accelerate(), going to assume values are given in increments of 10
   // TODO: Reivist this if we update the acceleration logic.
   // May also come back and find a way to not duplicate logic betwee this method and accelerate().
-  while (currentSpeed < endSpeed) {
+  while (currentSpeed > endSpeed) {
     currentSpeed -= 10;
     Serial.println("Speed decreased to " + String(currentSpeed));
     this->moveForward(currentSpeed);
