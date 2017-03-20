@@ -11,11 +11,15 @@ class Motor {
   
   public:
     int motorSpeed;
+    bool isMovingForward = false;
+    bool isMovingBackward = false;
     void setUp();
     void forward(int);
     void backward(int);
     void stop();
+    long long getEncoderTickCount();
     void incrementEncoderTickCount();
+    void decrementEncoderTickCount();
     Motor(int, int, int);
     ~Motor();
 };

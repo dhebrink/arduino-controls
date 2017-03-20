@@ -20,6 +20,42 @@ void Robot::setUp() {
   motorRight.setUp();
 }
 
+bool targetAcquired = false;
+void Robot::stepAutonomously() {
+  int targetX = 36; // inches
+  int targetY = 0; // inches
+  int errorMargin = 2; // inches
+
+  if (targetAcquired == false) {
+    if (x < targetX - errorMargin) {
+      moveForward(75);
+    } else if (x > targetX - errorMargin && x < targetX + errorMargin) {
+      targetAcquired = true;
+      moveStop();
+    }
+  } else {
+    if (abs(phi) > PI - 0.1 && abs(phi) < PI + 0.1) {
+      if (x > -errorMargin) {
+        moveForward(75);
+      } else {
+        moveStop();
+        delay(60000);
+      }
+    } else if (phi >= 0 && phi < PI + 0.1) {
+      turnLeft(1);
+    } else if (phi >= PI + 0.15) {
+      turnRight(1);
+    } else if (phi < 0 && phi > PI - 0.1) {
+      turnRight(1);
+    } else if (phi < PI - 0.1) {
+      turnLeft(1);
+    }
+  }
+  
+  updateOdometry();
+  delay(50);
+}
+
 void Robot::accelerate(int endSpeed, int timeDelay) {
   Serial.println("Accelerate To: " + String(endSpeed));
 
@@ -82,11 +118,13 @@ void Robot::decelerate(int endSpeed, int timeDelay) {
 void Robot::moveForward(int speed) {
   this->motorLeft.forward(speed);
   this->motorRight.forward(speed);
+  updateOdometry();
 }
 
 void Robot::moveBackward(int speed) {
   motorLeft.backward(speed);
   motorRight.backward(speed);
+  updateOdometry();
 }
 
 void Robot::turnLeft(int degreeOfTurn, int speed) {
@@ -96,7 +134,8 @@ void Robot::turnLeft(int degreeOfTurn, int speed) {
   int waitDuration = int((degreeOfTurn / 180.0) * 1000);
   Serial.println("Turning LEFT for " + String(waitDuration));
   delay(waitDuration);
-  this->moveStop();
+//  this->moveStop();
+  updateOdometry();
 }
 
 void Robot::turnRight(int degreeOfTurn, int speed) {
@@ -105,20 +144,60 @@ void Robot::turnRight(int degreeOfTurn, int speed) {
   int waitDuration = int((degreeOfTurn / 180.0) * 1000);
   Serial.println("Turning RIGHT for " + String(waitDuration));
   delay(waitDuration);
-  this->moveStop();
+//  this->moveStop();
+  updateOdometry();
+}
+
+void Robot::updateOdometry() {
+  int ticksPerRevolution = 192;
+  float wheelRadius = 2.5; // inches
+  float wheelAxelLength = 14.5; // inches
+  
+  long long countLeft = motorLeft.getEncoderTickCount();
+  long long countRight = motorRight.getEncoderTickCount();
+  long long deltaLeft = countLeft - lastEncoderTickCountLeft;
+  long long deltaRight = countRight - lastEncoderTickCountRight;
+
+  lastEncoderTickCountLeft = countLeft;
+  lastEncoderTickCountRight = countRight;
+
+  float distanceLeft = 2.0 * PI * wheelRadius * ((float)deltaLeft / ticksPerRevolution);
+  float distanceRight = 2.0 * PI * wheelRadius * ((float)deltaRight / ticksPerRevolution);
+  float distanceCenter = (distanceLeft + distanceRight) / 2.0;
+
+  x = x + distanceCenter * cos(phi);
+  y = y + distanceCenter * sin(phi);
+  phi = phi + ((distanceRight - distanceLeft) / wheelAxelLength);
 }
 
 void Robot::moveStop() {
   motorLeft.stop();
   motorRight.stop();
+  Serial.print("Right: ");
+  Serial.print((int)motorRight.getEncoderTickCount());
+  Serial.print(", Left: ");
+  Serial.print((int)motorLeft.getEncoderTickCount());
+  Serial.print(", x: ");
+  Serial.print(x);
+  Serial.print(", y: ");
+  Serial.print(y);
+  Serial.print(", phi: ");
+  Serial.println(phi);
 }
 
 static void Robot::handleEncoderTickLeft() {
-  robot.motorLeft.incrementEncoderTickCount();
+  if (robot.motorLeft.isMovingForward == true) {
+    robot.motorLeft.incrementEncoderTickCount();
+  } else if (robot.motorLeft.isMovingBackward == true) {
+    robot.motorLeft.decrementEncoderTickCount();
+  }
 }
 
 static void Robot::handleEncoderTickRight() {
-  robot.motorRight.incrementEncoderTickCount();
-  
+  if (robot.motorRight.isMovingForward == true) {
+    robot.motorRight.incrementEncoderTickCount();
+  } else if (robot.motorRight.isMovingBackward == true) {
+    robot.motorRight.decrementEncoderTickCount();
+  }
 }
 

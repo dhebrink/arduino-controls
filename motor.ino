@@ -32,6 +32,9 @@ void Motor::forward(int speed = 100) {
   setPinSpeed();
   digitalWrite(pinDrive1, HIGH);
   digitalWrite(pinDrive2, LOW);
+  
+  isMovingForward = true;
+  isMovingBackward = false;
 }
 
 void Motor::backward(int speed = 100) {
@@ -39,6 +42,9 @@ void Motor::backward(int speed = 100) {
   setPinSpeed();
   digitalWrite(pinDrive1, LOW);
   digitalWrite(pinDrive2, HIGH);
+  
+  isMovingForward = false;
+  isMovingBackward = true;
 }
 
 void Motor::stop() {
@@ -46,9 +52,20 @@ void Motor::stop() {
   analogWrite(pinEnable, LOW);
   digitalWrite(pinDrive1, LOW);
   digitalWrite(pinDrive2, LOW);
+  
+  isMovingForward = false;
+  isMovingBackward = false;
+}
+
+long long Motor::getEncoderTickCount() {
+  return encoderTickCount;
 }
 
 void Motor::incrementEncoderTickCount() {
   encoderTickCount++;
+}
+
+void Motor::decrementEncoderTickCount() {
+  encoderTickCount--;
 }
 
