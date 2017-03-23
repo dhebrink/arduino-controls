@@ -3,11 +3,6 @@
 
 const Robot robot;
 const Test test;
-const int distanceThreshold = 20;
-
-bool distanceIsSafe(int givenDistance) {
-  return (givenDistance > 0 && givenDistance < distanceThreshold);
-}
 
 void setup() {
   Serial.begin(9600);
@@ -19,8 +14,7 @@ void loop() {
   // here. Uncomment/comment lines you want to test.
   // Un-comment the `return` line to make the robot chill bro
 
-  //return;
-  //test.TurningLeft(robot);
-  //test.Acceleration(robot);
-  //robot.stepAutonomously();
-}
+  return;
+  //test.all(robot);
+  //robot.step();
+} 

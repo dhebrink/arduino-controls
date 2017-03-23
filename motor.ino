@@ -47,6 +47,16 @@ void Motor::backward(int speed = 100) {
   isMovingBackward = true;
 }
 
+void Motor::step(int speed = 100) {
+  if (speed > 0) {
+    forward(abs(speed));
+  } else if (speed < 0) {
+    backward(abs(speed));
+  } else {
+    stop();
+  }
+}
+
 void Motor::stop() {
   this->motorSpeed = 0;
   analogWrite(pinEnable, LOW);
@@ -57,8 +67,12 @@ void Motor::stop() {
   isMovingBackward = false;
 }
 
-long long Motor::getEncoderTickCount() {
+int Motor::getEncoderTickCount() {
   return encoderTickCount;
+}
+
+void Motor::resetEncoderTickCount() {
+  encoderTickCount = 0;
 }
 
 void Motor::incrementEncoderTickCount() {

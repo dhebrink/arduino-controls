@@ -4,8 +4,9 @@
 
 class Test {
     public:
-        static void Acceleration(Robot);
-        static void TurningLeft(Robot);
+        static void all(Robot);
+        static void forwardBackward(Robot);
+        static void turning(Robot);
 };
 
 #endif

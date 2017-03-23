@@ -5,8 +5,33 @@
 
 class Robot {
   private:
-    long long lastEncoderTickCountLeft = 0;
-    long long lastEncoderTickCountRight = 0;
+    // actual velocity
+    int velocityLeft = 0;
+    int velocityRight = 0;
+
+    // target velocities of motors
+    int targetVelocityLeft = 0;
+    int targetVelocityRight = 0;
+
+    // previous encoder tick count
+    int lastEncoderTickCountLeft = 0;
+    int lastEncoderTickCountRight = 0;
+
+    // robot measurements
+    float wheelRadius = 2.5; // inches
+    float wheelAxelLength = 17; // inches
+
+    // private step functions
+    void stepNavigation();
+    void stepObstacleAvoidance();
+    void stepBumpers();
+    void stepMotors();
+
+    void printStats();
+
+    // update stats functions that are called toward end of step()
+    void updateHeadingError();
+    void updateOdometry();
   
   public:
     Sensor sensorForward = Sensor(50, 51);
@@ -15,21 +40,28 @@ class Robot {
     Motor motorLeft = Motor(2, 24, 25);
     Motor motorRight = Motor(3, 23, 22);
 
+    // target position of robot
+    float targetX = -24;
+    float targetY = 24;
+    float targetTheta = 0;
+
+    // current position of robot
     float x = 0;
     float y = 0;
-    float z = 0;
-    float phi = 0; // angle of robot (in radians)
-    
+    float theta = 0; // angle of robot (in radians)
+
+    // error stats of current position compared to target
+    float headingError = 0; // radians
+    float targetBearing = 0; // radians
+    float targetDistance = 0; // inches
+
+    // instance functions
     void setUp();
-    void updateOdometry();
-    void stepAutonomously();
-    void accelerate(int endSpeed, int timeDelay = 500);
-    void decelerate(int endSpeed, int timeDelay = 500);
-    void moveForward(int speed = 100);
-    void moveBackward(int speed = 100);
-    void turnLeft(int degreeOfTurn, int speed = 100);
-    void turnRight(int degreeOfTurn, int speed = 100);
-    void moveStop();
+    void step();
+    void drive();
+    void setVelocity(int, int);
+
+    // wheel encoder handlers. these have to be static :(
     static void handleEncoderTickLeft();
     static void handleEncoderTickRight();
     
