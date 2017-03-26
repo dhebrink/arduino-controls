@@ -14,7 +14,13 @@ void loop() {
   // here. Uncomment/comment lines you want to test.
   // Un-comment the `return` line to make the robot chill bro
 
-  return;
+  //return;
   //test.all(robot);
-  //robot.step();
+  robot.step();
+  
+//  robot.setVelocity(10, 10);
+//  robot.drive();
+//  robot.updateOdometry();
+//  robot.printStats();
+//  delay(50);
 } 

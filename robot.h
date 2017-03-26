@@ -2,17 +2,26 @@
 #define ROBOT_H
 #include "motor.h"
 #include "sensor.h"
+#include "pid.h"
 
 class Robot {
   private:
+    // ultrasonic sensor readings
+    int distanceForward = 0;
+    int distanceLeft = 0;
+    int distanceRight = 0;
+  
     // actual velocity
-    int velocityLeft = 0;
-    int velocityRight = 0;
+    double velocityLeft = 0;
+    double velocityRight = 0;
+
+    double motorPwmLeft = 0;
+    double motorPwmRight = 0;
 
     // target velocities of motors
-    int targetVelocityLeft = 0;
-    int targetVelocityRight = 0;
-
+    double targetVelocityLeft = 0;
+    double targetVelocityRight = 0;
+    
     // previous encoder tick count
     int lastEncoderTickCountLeft = 0;
     int lastEncoderTickCountRight = 0;
@@ -22,16 +31,12 @@ class Robot {
     float wheelAxelLength = 17; // inches
 
     // private step functions
+    void readSensors();
     void stepNavigation();
+    void stepWallFollow();
     void stepObstacleAvoidance();
     void stepBumpers();
     void stepMotors();
-
-    void printStats();
-
-    // update stats functions that are called toward end of step()
-    void updateHeadingError();
-    void updateOdometry();
   
   public:
     Sensor sensorForward = Sensor(50, 51);
@@ -40,20 +45,26 @@ class Robot {
     Motor motorLeft = Motor(2, 24, 25);
     Motor motorRight = Motor(3, 23, 22);
 
+    //PID Regulators
+    PID regulatorMotorLeft = PID(&velocityLeft, &motorPwmLeft, &targetVelocityLeft, 3, 3, 0.0, DIRECT);
+    PID regulatorMotorRight = PID(&velocityRight, &motorPwmRight, &targetVelocityRight, 3, 3, 0.0, DIRECT);
+    PID regulatorNavigationOmega = PID(&theta, &omega, &desiredTheta, 2, 1, 0, DIRECT);
+
     // target position of robot
-    float targetX = -24;
-    float targetY = 24;
+    float targetX = 0;
+    float targetY = 96; 
     float targetTheta = 0;
 
     // current position of robot
     float x = 0;
     float y = 0;
-    float theta = 0; // angle of robot (in radians)
+    double theta = 0; // angle of robot (in radians)
 
     // error stats of current position compared to target
-    float headingError = 0; // radians
-    float targetBearing = 0; // radians
-    float targetDistance = 0; // inches
+    double omega = 0;
+    double headingError = 0; // radians
+    double desiredTheta = 0; // radians
+    float targetDistance = sqrt(((targetX - x)*(targetX - x)) + ((targetY - y)*(targetY - y))); // inches
 
     // instance functions
     void setUp();
@@ -64,6 +75,12 @@ class Robot {
     // wheel encoder handlers. these have to be static :(
     static void handleEncoderTickLeft();
     static void handleEncoderTickRight();
+
+    void printStats();
+
+    // update stats functions that are called toward end of step()
+    void updateHeadingError();
+    void updateOdometry();
     
     Robot();
     ~Robot();

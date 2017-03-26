@@ -10,7 +10,7 @@ class Sensor {
     public:
         void setUp();
         void initializePins();
-        int getDistance();
+        int getDistanceInches();
         Sensor(int, int);
         ~Sensor();
 };
