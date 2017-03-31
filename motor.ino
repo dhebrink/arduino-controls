@@ -71,6 +71,18 @@ int Motor::getEncoderTickCount() {
   return encoderTickCount;
 }
 
+int Motor::getPreviousEncoderTickCount() {
+  float result = previousEncoderTickCount;
+  previousEncoderTickCount = encoderTickCount;
+  return result;
+}
+
+int Motor::getEncoderTickCountDelta() {
+  float tickCount = getEncoderTickCount();
+  float tickCountPrevious = getPreviousEncoderTickCount();
+  return tickCount - tickCountPrevious;
+}
+
 void Motor::resetEncoderTickCount() {
   encoderTickCount = 0;
 }

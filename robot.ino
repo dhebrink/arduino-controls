@@ -2,6 +2,12 @@
 #include "motor.h"
 #include "pid.h"
 
+int waypointCount = 4;
+int waypointX[4] = {0, 12, -36, 0};
+int waypointY[4] = {0, 72, 36, 0};
+int waypointCurrent = 0;
+bool navigationComplete = false;
+
 Robot::Robot() {}
 
 Robot::~Robot() {}
@@ -12,15 +18,15 @@ void Robot::setUp() {
   
   regulatorMotorLeft.SetMode(AUTOMATIC);
   regulatorMotorLeft.SetSampleTime(25);
-  regulatorMotorLeft.SetOutputLimits(-255, 255);
+  regulatorMotorLeft.SetOutputLimits(-100, 100);
   
   regulatorMotorRight.SetMode(AUTOMATIC);
   regulatorMotorRight.SetSampleTime(25);
-  regulatorMotorRight.SetOutputLimits(-255, 255);
+  regulatorMotorRight.SetOutputLimits(-100, 100);
   
   regulatorNavigationOmega.SetMode(AUTOMATIC);
   regulatorNavigationOmega.SetSampleTime(25);
-  regulatorNavigationOmega.SetOutputLimits(-TWO_PI, TWO_PI);
+  regulatorNavigationOmega.SetOutputLimits(-6, 6);
   
   sensorForward.setUp();
   sensorRight.setUp();
@@ -37,44 +43,44 @@ void Robot::readSensors() {
 }
 
 void Robot::step() {
-  targetVelocityLeft = 10;
-  targetVelocityRight = 10;
-
   readSensors();
+  setWaypoint();
   
   stepNavigation();
-  stepWallFollow();
-  stepObstacleAvoidance();
-  stepBumpers();
+//  stepWallFollow();
+//  stepObstacleAvoidance();
+//  stepBumpers();
   stepMotors();
   
   updateOdometry();
   updateHeadingError();
   
-  printStats();
-  
   delay(50);
 }
 
 void Robot::printStats() {
-//  Serial.print("Position: ");
-//  Serial.print(x);
-//  Serial.print(", ");
-//  Serial.print(y);
-//  Serial.print(", ");
-//  Serial.print(theta);
-//  Serial.print(";  ");
-//  Serial.print("Omega: "); 
-//  Serial.print(omega);
-//  Serial.print(";  ");
-//  Serial.print("Desired Theta: ");
-//  Serial.println(desiredTheta);
-//  
+  Serial.print("Position: ");
+  Serial.print(x);
+  Serial.print(", ");
+  Serial.print(y);
+  Serial.print(", ");
+  Serial.print(theta);
+  Serial.print(";  ");
+  Serial.print("Omega: "); 
+  Serial.print(omega);
+  Serial.print(";  ");
+  Serial.print("Desired Theta: ");
+  Serial.println(desiredTheta);
+//  Serial.print("Target Distance: ");
+//  Serial.println(targetDistance);
 //  Serial.print("Target Velocity Left: ");
 //  Serial.print(targetVelocityLeft);
 //  Serial.print(", Target Velocity Right: ");
 //  Serial.println(targetVelocityRight);
-//  
+//  Serial.print("Left PWM: ");
+//  Serial.print(motorPwmLeft);
+//  Serial.print(", Right PWM: ");
+//  Serial.println(motorPwmRight);
 //  Serial.print("Sensor Forward: ");
 //  Serial.print(distanceForward);
 //  Serial.print(", Sensor Left: ");
@@ -83,22 +89,57 @@ void Robot::printStats() {
 //  Serial.println(distanceRight);
 }
 
-// todo: replace with PID controller
-bool done = false;
+void Robot::setWaypoint() {
+  bool done = isWaypointComplete();
+  if (done == true) {
+    if (waypointCurrent + 1 <= waypointCount) {
+      waypointCurrent++;
+      targetX = waypointX[waypointCurrent];
+      targetY = waypointY[waypointCurrent];
+    }
+  }
+}
+
+bool Robot::isNavigationComplete() {
+  if (navigationComplete == true) {
+    return true;
+  } else {
+    bool result = (isWaypointComplete() && waypointCurrent >= waypointCount);
+    if (result == true) {
+      navigationComplete = true;
+    }
+    return result;
+  }
+}
+
+bool Robot::isWaypointComplete() {
+  return (targetDistance < 2);
+}
+
 void Robot::stepNavigation() {
+  bool done = isNavigationComplete();
   if (done == true) {
     targetVelocityLeft = 0;
     targetVelocityRight = 0;
-    return;
-  }
-  
-  if (targetDistance < 5) {
-    done = true;
   } else {
-    float velocity = 15;
     regulatorNavigationOmega.Compute();
-    targetVelocityLeft = (2*velocity + omega*wheelAxelLength)/(2*wheelRadius);
-    targetVelocityRight = (2*velocity - omega*wheelAxelLength)/(2*wheelRadius);
+
+    float velocity = velocitySlow;
+    float _omega = omega;
+    float thetaError = desiredTheta - theta;
+
+    if (abs(thetaError) > PI) {
+      velocity = 0;
+      _omega /= 2;
+    } else if (abs(thetaError) > PI / 2) {
+      velocity /= 2;
+      _omega /= 2;
+    } else if (targetDistance < 24) {
+      velocity /= 2;
+    }
+    
+    targetVelocityLeft = (2*velocity + _omega*wheelAxelLength)/(2*wheelRadius);
+    targetVelocityRight = (2*velocity - _omega*wheelAxelLength)/(2*wheelRadius);
   }
 }
 
@@ -109,37 +150,37 @@ void Robot::stepWallFollow() {
   int enterDistance = 24;
   int exitDistance = 36;
 
-  if (distanceLeft < enterDistance) {
-    runWallFollowProgram = true;
-    wallFollowProgramStep = 1;
-    wallFollowProgramStepCount = -1;
-  } else if (distanceRight < enterDistance) {
-    runWallFollowProgram = true;
-    wallFollowProgramStep = 1;
-    wallFollowProgramStepCount = -1;
+  if (abs(desiredTheta - theta) > PI) {
+    if (distanceLeft < enterDistance) {
+      runWallFollowProgram = true;
+      wallFollowProgramStep = 1;
+      wallFollowProgramStepCount = -1;
+    } else if (distanceRight < enterDistance) {
+      runWallFollowProgram = true;
+      wallFollowProgramStep = 1;
+      wallFollowProgramStepCount = -1;
+    }
   }
 
   if (runWallFollowProgram == true) {
     if (wallFollowProgramStep == 1) {
       if (distanceLeft < enterDistance / 2) {
-        float velocity = 10;
         omega = PI / 2;
-        targetVelocityLeft = (2*velocity + omega*wheelAxelLength)/(2*wheelRadius);
-        targetVelocityRight = (2*velocity - omega*wheelAxelLength)/(2*wheelRadius);
+        targetVelocityLeft = (2*velocitySlow + omega*wheelAxelLength)/(2*wheelRadius);
+        targetVelocityRight = (2*velocitySlow - omega*wheelAxelLength)/(2*wheelRadius);
       } else if (distanceLeft >= enterDistance / 2) {
         wallFollowProgramStep = 2;
       } else if (distanceRight < enterDistance / 2) {
-        float velocity = 10;
         omega = -PI / 2;
-        targetVelocityLeft = (2*velocity + omega*wheelAxelLength)/(2*wheelRadius);
-        targetVelocityRight = (2*velocity - omega*wheelAxelLength)/(2*wheelRadius);
+        targetVelocityLeft = (2*velocitySlow + omega*wheelAxelLength)/(2*wheelRadius);
+        targetVelocityRight = (2*velocitySlow - omega*wheelAxelLength)/(2*wheelRadius);
       } else if (distanceRight >= enterDistance / 2) {
         wallFollowProgramStep = 2;
       }
     } else if (wallFollowProgramStep == 2) {
       wallFollowProgramStepCount++;
-      targetVelocityLeft = 10;
-      targetVelocityRight = 10;
+      targetVelocityLeft = velocitySlow;
+      targetVelocityRight = velocitySlow;
 
       if (wallFollowProgramStepCount >= 20) {
         runWallFollowProgram = false;
@@ -177,8 +218,8 @@ void Robot::stepObstacleAvoidance() {
     targetVelocityLeft = (omega*wheelAxelLength)/(2*wheelRadius);
   } else if (detectType == FORWARD_DETECT) {
     // zero speed, keep turning in same direction
-    targetVelocityLeft = -10;
-    targetVelocityRight = 10;
+    targetVelocityLeft = -velocitySlow;
+    targetVelocityRight = velocitySlow;
   }
 }
 
@@ -194,11 +235,11 @@ void Robot::stepBumpers() {
 
   if (runBumperProgram == true) {
     if (bumperProgramStep == 1) {
-      targetVelocityLeft = -10;
-      targetVelocityRight = -10;
+      targetVelocityLeft = -velocitySlow / 2;
+      targetVelocityRight = -velocitySlow / 2;
   
       bumperProgramStepCount++;
-      if (bumperProgramStepCount >= 15) {
+      if (bumperProgramStepCount >= 10) {
         bumperProgramStep = 2;
         bumperProgramStepCount = -1;
       }
@@ -228,36 +269,41 @@ void Robot::stepBumpers() {
 }
 
 void Robot::stepMotors() {
-  regulatorMotorRight.Compute();
-  regulatorMotorLeft.Compute();
-  motorRight.step(motorPwmRight);
-  motorLeft.step(motorPwmLeft);
+  if (targetVelocityLeft == 0) {
+    motorLeft.stop();
+  } else {
+    regulatorMotorLeft.Compute();
+    motorLeft.step(motorPwmLeft);
+  }
+
+  if (targetVelocityRight == 0) {
+    motorRight.stop();
+  } else {
+    regulatorMotorRight.Compute();
+    motorRight.step(motorPwmRight);
+  }
 }
 
 void Robot::updateOdometry() {
   int ticksPerRevolution = 192;
-  
-  int countLeft = motorLeft.getEncoderTickCount();
-  int countRight = motorRight.getEncoderTickCount();
-  velocityLeft = countLeft - lastEncoderTickCountLeft;
-  velocityRight = countRight - lastEncoderTickCountRight;
 
-  lastEncoderTickCountLeft = countLeft;
-  lastEncoderTickCountRight = countRight;
+  // change in ticks from last check
+  int tickDeltaLeft = motorLeft.getEncoderTickCountDelta();
+  int tickDeltaRight = motorRight.getEncoderTickCountDelta();
 
   // distance moved given # of wheel ticks and wheel radius
-  float distanceLeft = 2.0 * PI * wheelRadius * ((float)velocityLeft / ticksPerRevolution);
-  float distanceRight = 2.0 * PI * wheelRadius * ((float)velocityRight / ticksPerRevolution);
+  float distanceLeft = 2.0 * PI * wheelRadius * ((float)tickDeltaLeft / ticksPerRevolution);
+  float distanceRight = 2.0 * PI * wheelRadius * ((float)tickDeltaRight / ticksPerRevolution);
   float distanceCenter = (distanceLeft + distanceRight) / 2.0;
 
-  // trigonometry to determine XY coordinates of center of robot
+  // determine XY coordinates of center of robot and theta (angle)
   x = x + distanceCenter * sin(theta);
   y = y + distanceCenter * cos(theta);
-  theta = theta - (((distanceRight - distanceLeft) / wheelAxelLength) * PI);
+  theta -= (distanceRight - distanceLeft) / wheelAxelLength;
 
-  // keep theta between -360 degrees and +360 degrees (makes error calculations much easier)
-  if (theta < -TWO_PI) theta += TWO_PI;
-  else if (theta > TWO_PI) theta -= TWO_PI;
+  // keep theta between -180 degrees and +180 degrees (makes error calculations much easier)
+  if (theta < -TWO_PI * 2) theta += TWO_PI;
+  else if (theta > TWO_PI * 2) theta -= TWO_PI;
 }
 
 void Robot::updateHeadingError() {
@@ -265,15 +311,19 @@ void Robot::updateHeadingError() {
   float errorX = targetX - x;
   float errorY = targetY - y;
   targetDistance = sqrt((errorX*errorX) + (errorY*errorY));
-  
-  // ensure no division by zero
-  if (errorX > 0.00001) desiredTheta = PI/2 - atan(errorY/errorX);
-  else if (errorX < -0.00001) desiredTheta = -PI/2 - atan(errorY/errorX);
+  desiredTheta = PI/2 - atan2(errorY, errorX);
+
+  //
+  if (desiredTheta - theta > PI && abs(theta + TWO_PI - desiredTheta) < abs(desiredTheta - theta)) {
+    theta += TWO_PI;
+  } else if (theta - desiredTheta > PI && abs(theta + TWO_PI - desiredTheta) > abs(desiredTheta - theta)) {
+    theta -= TWO_PI;
+  }
 
   // # of radians robot needs to turn to face target
   headingError = abs(desiredTheta - theta);
-  if (headingError > TWO_PI) headingError = abs(headingError - TWO_PI);
-  else if (headingError < -TWO_PI) headingError = abs(headingError + TWO_PI);
+  if (headingError > TWO_PI) headingError = headingError - TWO_PI;
+  else if (headingError < -TWO_PI) headingError = headingError + TWO_PI;
 }
 
 void Robot::drive() {
@@ -290,6 +340,8 @@ static void Robot::handleEncoderTickLeft() {
     robot.motorLeft.incrementEncoderTickCount();
   } else if (robot.motorLeft.isMovingBackward == true) {
     robot.motorLeft.decrementEncoderTickCount();
+  } else {
+     robot.motorLeft.incrementEncoderTickCount();
   }
 }
 
@@ -297,6 +349,8 @@ static void Robot::handleEncoderTickRight() {
   if (robot.motorRight.isMovingForward == true) {
     robot.motorRight.incrementEncoderTickCount();
   } else if (robot.motorRight.isMovingBackward == true) {
+    robot.motorRight.decrementEncoderTickCount();
+  } else {
     robot.motorRight.decrementEncoderTickCount();
   }
 }

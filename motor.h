@@ -7,6 +7,8 @@ class Motor {
     int pinDrive1;
     int pinDrive2;
     int encoderTickCount;
+    int previousEncoderTickCount;
+    int getPreviousEncoderTickCount();
     void setPinSpeed();
   
   public:
@@ -19,6 +21,7 @@ class Motor {
     void step(int);
     void stop();
     int getEncoderTickCount();
+    int getEncoderTickCountDelta();
     void resetEncoderTickCount();
     void incrementEncoderTickCount();
     void decrementEncoderTickCount();

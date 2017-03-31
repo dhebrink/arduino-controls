@@ -16,11 +16,9 @@ void loop() {
 
   //return;
   //test.all(robot);
-  robot.step();
   
-//  robot.setVelocity(10, 10);
-//  robot.drive();
-//  robot.updateOdometry();
-//  robot.printStats();
-//  delay(50);
+  robot.printStats();
+  for (int i = 0; i < 10; i++) {
+    robot.step();
+  }
 } 

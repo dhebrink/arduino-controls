@@ -11,20 +11,16 @@ class Robot {
     int distanceLeft = 0;
     int distanceRight = 0;
   
-    // actual velocity
+    // actual velocity (ticks per 50 ms)
     double velocityLeft = 0;
     double velocityRight = 0;
 
     double motorPwmLeft = 0;
     double motorPwmRight = 0;
 
-    // target velocities of motors
+    // target velocities of motors (ticks per 50 ms)
     double targetVelocityLeft = 0;
     double targetVelocityRight = 0;
-    
-    // previous encoder tick count
-    int lastEncoderTickCountLeft = 0;
-    int lastEncoderTickCountRight = 0;
 
     // robot measurements
     float wheelRadius = 2.5; // inches
@@ -37,6 +33,10 @@ class Robot {
     void stepObstacleAvoidance();
     void stepBumpers();
     void stepMotors();
+
+    void setWaypoint();
+    bool isNavigationComplete();
+    bool isWaypointComplete();
   
   public:
     Sensor sensorForward = Sensor(50, 51);
@@ -46,13 +46,18 @@ class Robot {
     Motor motorRight = Motor(3, 23, 22);
 
     //PID Regulators
-    PID regulatorMotorLeft = PID(&velocityLeft, &motorPwmLeft, &targetVelocityLeft, 3, 3, 0.0, DIRECT);
-    PID regulatorMotorRight = PID(&velocityRight, &motorPwmRight, &targetVelocityRight, 3, 3, 0.0, DIRECT);
-    PID regulatorNavigationOmega = PID(&theta, &omega, &desiredTheta, 2, 1, 0, DIRECT);
+    PID regulatorMotorLeft = PID(&velocityLeft, &motorPwmLeft, &targetVelocityLeft, 7, 8, 0, DIRECT);
+    PID regulatorMotorRight = PID(&velocityRight, &motorPwmRight, &targetVelocityRight, 7, 8, 0, DIRECT);
+    PID regulatorNavigationOmega = PID(&theta, &omega, &desiredTheta, 5, 0.5, 0, DIRECT);
+
+    // velocities (ticks per 50 ms)
+    float velocityFast = 20;
+    float velocityModerate = 15;
+    float velocitySlow = 7;
 
     // target position of robot
     float targetX = 0;
-    float targetY = 96; 
+    float targetY = 0; 
     float targetTheta = 0;
 
     // current position of robot
